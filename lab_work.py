@@ -30,7 +30,7 @@ class LabWorkApp:
         frame.pack(padx=20, pady=10, fill='both', expand=True)
         
         headers = ['Напряжение\nисточника\nпитания, В', 'Предел\nизмерения\nПИ, В', 
-                   'Измеренное\nзначение, В', 'Число\nделений\nшкалы', 
+                   'Измеренное\nзначение, В', 'Отсчёт\nпо шкале\nдел', 
                    'Цена\nделения\nВ/д', 'Класс\nточности\n%', 
                    'Абсолютная\nпогрешность\nΔU', 'Относительная\nпогрешность\n%']
         
@@ -48,7 +48,7 @@ class LabWorkApp:
                      sticky='nsew', padx=1, pady=1)
             
             self.table_13_entries[source] = {}
-            col_names = ['predel', 'izmerenie', 'num_deleniy', 'tsena', 'klass', 
+            col_names = ['predel', 'izmerenie', 'otschet', 'tsena', 'klass', 
                         'abs_pogr', 'otn_pogr']
             readonly_fields = ['tsena', 'abs_pogr', 'otn_pogr']
             
@@ -56,7 +56,7 @@ class LabWorkApp:
                 entry = ttk.Entry(frame, width=15, justify='center')
                 if col_name in readonly_fields:
                     entry.config(state='readonly')
-                if col_name == 'predel' or col_name == 'num_deleniy':
+                if col_name == 'izmerenie' or col_name == 'otschet':
                     entry.bind('<KeyRelease>', lambda e, s=source: self.calculate_tsena_13(s))
                 entry.grid(row=row, column=col, padx=1, pady=1)
                 self.table_13_entries[source][col_name] = entry
@@ -72,15 +72,15 @@ class LabWorkApp:
     def calculate_tsena_13(self, source):
         try:
             entries = self.table_13_entries[source]
-            predel_str = entries['predel'].get()
-            num_deleniy_str = entries['num_deleniy'].get()
+            izmerenie_str = entries['izmerenie'].get()
+            otschet_str = entries['otschet'].get()
             
-            if predel_str and num_deleniy_str:
-                predel = float(predel_str)
-                num_deleniy = float(num_deleniy_str)
+            if izmerenie_str and otschet_str:
+                izmerenie = float(izmerenie_str)
+                otschet = float(otschet_str)
                 
-                if num_deleniy != 0:
-                    tsena = predel / num_deleniy
+                if otschet != 0:
+                    tsena = izmerenie / otschet
                     entries['tsena'].config(state='normal')
                     entries['tsena'].delete(0, tk.END)
                     entries['tsena'].insert(0, f"{tsena:.6f}")
