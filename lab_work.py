@@ -153,7 +153,7 @@ class LabWorkApp:
         frame.pack(padx=20, pady=10, fill='both', expand=True)
         
         headers = ['I\nА', 'U\nВ', 'Pк\nВт\nКосв ИЗМ', 
-                   'ΔU\nВ', 'ΔI\nмА', 'ΔPк\nВт\nКосв изм',
+                   'ΔU\nВ', 'ΔI\nмА', 'ΔPк.\nВт\nКосв изм',
                    'δI\n%', 'δU\n%', 'δP\n%',
                    'Pк\nВт', 'ΔPк\nВт', 'δPк\n%']
         
@@ -187,13 +187,15 @@ class LabWorkApp:
                         'dU', 'dI_mA', 'DP_indirect',
                         'dI_rel', 'dU_rel', 'dP_rel',
                         'P_direct', 'DP_direct', 'dP_direct_rel']
-            readonly_fields = ['DP_indirect', 'dI_rel', 'dU_rel', 'dP_rel',
+            readonly_fields = ['P_indirect', 'DP_indirect', 'dI_rel', 'dU_rel', 'dP_rel',
                              'dP_direct_rel']
             
             for col, col_name in enumerate(col_names):
                 entry = ttk.Entry(frame, width=10, justify='center')
                 if col_name in readonly_fields:
                     entry.config(state='readonly')
+                if col_name == 'I' or col_name == 'U':
+                    entry.bind('<KeyRelease>', lambda e, r=row: self.calculate_p_indirect_15(r))
                 entry.grid(row=row+3, column=col, padx=1, pady=1)
                 row_entries[col_name] = entry
             
@@ -206,6 +208,25 @@ class LabWorkApp:
                   command=self.calculate_table_15).pack(side='left', padx=5)
         ttk.Button(btn_frame, text="Очистить", 
                   command=self.clear_table_15).pack(side='left', padx=5)
+    
+    def calculate_p_indirect_15(self, row_idx):
+        try:
+            if row_idx < len(self.table_15_entries):
+                row_entries = self.table_15_entries[row_idx]
+                I_str = row_entries['I'].get()
+                U_str = row_entries['U'].get()
+                
+                if I_str and U_str:
+                    I = float(I_str)
+                    U = float(U_str)
+                    
+                    P_indirect_calc = U * I
+                    row_entries['P_indirect'].config(state='normal')
+                    row_entries['P_indirect'].delete(0, tk.END)
+                    row_entries['P_indirect'].insert(0, f"{P_indirect_calc:.2f}")
+                    row_entries['P_indirect'].config(state='readonly')
+        except (ValueError, ZeroDivisionError):
+            pass
         
     def create_graphs_tab(self):
         tab = ttk.Frame(self.notebook)
@@ -388,13 +409,12 @@ class LabWorkApp:
                     row_entries['dP_rel'].insert(0, f"{dP_rel_percent:.2f}")
                     row_entries['dP_rel'].config(state='readonly')
                     
-                    if P_indirect_str:
-                        P_indirect = float(P_indirect_str)
-                        DP_indirect = P_indirect * (dP_rel_percent / 100)
-                        row_entries['DP_indirect'].config(state='normal')
-                        row_entries['DP_indirect'].delete(0, tk.END)
-                        row_entries['DP_indirect'].insert(0, f"{DP_indirect:.3f}")
-                        row_entries['DP_indirect'].config(state='readonly')
+                    P_indirect_calc = U * I
+                    DP_indirect = P_indirect_calc * (dP_rel_percent / 100)
+                    row_entries['DP_indirect'].config(state='normal')
+                    row_entries['DP_indirect'].delete(0, tk.END)
+                    row_entries['DP_indirect'].insert(0, f"{DP_indirect:.3f}")
+                    row_entries['DP_indirect'].config(state='readonly')
                     
                     if P_direct_str and DP_direct_str:
                         P_direct = float(P_direct_str)
